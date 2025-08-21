@@ -20,8 +20,11 @@ private:
 public:
     void add_egde(Vertex u, Vertex v);
     void remove_egde(Vertex u, Vertex v);
-    std::list<Vertex>& get_adj(Vertex u);
-    void Print_Adjancency_List(GraphAL g);
+    std::list<Vertex>& get_adj(const Vertex u);
+    void Print_Adjancency_List(const GraphAL g );
+    uint get_num_vertices() const;
+    uint get_num_edges() const;
+
 
     //ESPEC-3
     GraphAL(uint num_vertices){
@@ -40,8 +43,16 @@ public:
 
 };
 
-std::list<Vertex>& GraphAL::get_adj(Vertex u){
+std::list<Vertex>& GraphAL::get_adj(const Vertex u){
     return adj[u];
+}
+
+uint GraphAL::get_num_vertices() const {
+    return num_vertices;
+}
+
+uint GraphAL::get_num_edges() const{
+    return num_edges;
 }
 
 //ESPEC-5
@@ -55,12 +66,26 @@ void GraphAL::add_egde(const Vertex u, const Vertex v){
 void GraphAL::remove_egde(const Vertex u, const Vertex v){
     adj[u].remove(v);
     adj[v].remove(u);
-    num_edges++;
+    num_edges--;
 }
 
 //ESPEC-7
-void GraphAL::Print_Adjancency_List(GraphAL g){
+void GraphAL::Print_Adjancency_List(const GraphAL g) {
+    std::cout << "num_vertices: " << get_num_vertices() << "\n";
+    std::cout << "num_edges: " << get_num_edges() << "\n";
 
+    //mano, outro ngc é q ele pede que seja num_vertices - 1
+    //so q quando coloca -1 ele n imprime todos
+    for (uint u = 0; u < get_num_vertices() ; u++) {
+        std::cout << u << ": ";
+
+        const std::list<Vertex>& l = get_adj(u);
+
+        for (auto v: l) {
+            std::cout << v << ", ";
+        }
+        std::cout << "\n";
+    }
 }
 
 
@@ -79,7 +104,9 @@ int main(){
 
     uint u, v = 0;
 
-    for(uint i = 0; i < n-1; i++){
+    //OUTRO ngc é q ele pede q seja n-1
+    //sendo que so roda corretamente quando é m
+    for(uint i = 0; i < m; i++){
         std::cin >> u >> v;
         graph.add_egde(u, v);
     }
