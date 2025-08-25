@@ -1,129 +1,121 @@
 #include <iostream>
+#include <vector>
 #include <list>
 
 //ESPEC-1
-typedef unsigned int Vertex;
-typedef unsigned int uint;
+using uint = unsigned int;
+using Vertex = uint;
+using Weight = uint;
 
-class GraphAL{
+
+class GraphAM{
+//ESPEC-2
 private:
-    //ESPEC-2 ( Tem que ser ponteiro )
-    //mano, tem um problema q tipo
-    //o prof quer especificamente q seja adj[]
-    //so que usar o [] e foda pq e ultrapassado e da erro
-    //ai eu n sei se a gnt deixa com ou sem []
-
-/*   /|\
-      |
-acho que isso pode ser pq o uml la da classe GraphAl tava escrito
-adj[]: std::list<Vertex> nao pq tem que declarar como adj[] mas pq mais pra frente vai usar esse ponteiro pra
-armazenar uma lista e essa lista vai ter o []
-acho que deve ser isso*/
-
-    std::list<Vertex>* adj;
+    std::vector<std::vector<Weight>> adj;
     uint num_vertices;
     uint num_edges;
 
 public:
     void add_egde(Vertex u, Vertex v);
     void remove_egde(Vertex u, Vertex v);
-    std::list<Vertex>& get_adj(const Vertex u) const;
-    void Print_Adjancency_List(const GraphAL& g ) const;
+    std::list<Weight> get_adj(const Vertex u) const;
+    void Print_Adjacency_Matrix(const GraphAM& g ) const;
     uint get_num_vertices() const;
     uint get_num_edges() const;
+    std::vector<std::vector<Weight>> get_adj_matrix() const;
 
 
     //ESPEC-3
-    GraphAL(uint num_vertices){
+    GraphAM(uint num_vertices){
 
         this->num_vertices = num_vertices;
         this->num_edges = 0;
 
-        adj = new std::list<Vertex>[num_vertices];
+        adj = std::vector<std::vector<Weight>>(num_vertices);
+
+        //acho que isso q faz a inicializacao de todos os elementos com 0 do jeito q ele pediur
+        for (auto& linha : adj) {
+            linha = std::vector<Weight>(num_vertices, 0);
+        }
     }
 
     //ESPEC-4
-    ~GraphAL(){
-        delete [] adj;
-        adj = nullptr;
+    ~GraphAM(){
+        //prof pediu pra adicionar um comentario falando q a destruicao e automaticar
     }
 
 
 };
 
-std::list<Vertex>& GraphAL::get_adj(const Vertex u) const{
+//ESPEC-6
+std::list<Weight> GraphAM::get_adj(const Vertex u) const{
     if (u < 0 || u >= num_vertices) {
         throw std::invalid_argument("botou um numero que nao ta na lista");
     }
-    return adj[u];
+
+    std::list<Weight> lista;
+
+    //aq na real ele pediu pra ser o U pra ser usado no loop
+    for (int v = 0; v < get_num_vertices() - 1 ; v++) {
+        if (adj[u][v] != 0) {
+            lista.push_back(v);
+        }
+    }
+
+    return lista;
 }
 
-uint GraphAL::get_num_vertices() const {
+uint GraphAM::get_num_vertices() const {
     return num_vertices;
 }
 
-uint GraphAL::get_num_edges() const{
+uint GraphAM::get_num_edges() const{
     return num_edges;
 }
 
+//ESPEC-7
+std::vector<std::vector<Weight>> GraphAM::get_adj_matrix() const {
+    return adj;
+}
+
 //ESPEC-5
-/*olhando o exercicio e as especificacoes na verdade em nenhum ponto ta escrito que precisa
-tratar as excecoes, so tava especificado que precisa lancar uma excecao quando for invalido
-entao nada de try catch apenas throw
-tem ate uma observacao na especificacao 8 que fala sobre pensar no que teria que ser feito pra
-fazer o codigo poderia ter pra lidar melhor com esses erros e tal mas era sobre pensar como
-seria se fizesse e nao tava pedindo pra fazer*/
-void GraphAL::add_egde(const Vertex u, const Vertex v){
+void GraphAM::add_egde(const Vertex u, const Vertex v){
     if (u < 0 || v < 0 || u >= num_vertices || v >= num_vertices || u == v) {
-        throw std::invalid_argument("mano tem algum valor ai que nao faz sentido");
+        throw std::invalid_argument("Um valor eh negativo our um eh maior que numero de vertices our sao imguais");
     }
-    adj[u].push_back(v);
-    adj[v].push_back(u);
+    adj[u][v] = 1;
+    adj[v][u] = 1;
     num_edges++;
 }
 
-
-/*nao sei pq esse aqui existe
-nao tava pedindo em nenhuma parte pra ter um remove_edge e o metodo acaba nunca sendo usado no
-fim das contas
-vou deixar mesmo assim pra parecer mais q a gente ta caprichando*/
-void GraphAL::remove_egde(const Vertex u, const Vertex v){
+//conserta ae
+/*void GraphAM::remove_egde(const Vertex u, const Vertex v){
     if (u < 0 || v < 0 || u >= num_vertices || v >= num_vertices || u == v) {
-        throw std::invalid_argument("mano tem algum valor ai que nao faz sentido");
+        throw std::invalid_argument("Um valor eh negativo our um eh maior que numero de vertices our sao imguais");
     }
     adj[u].remove(v);
     adj[v].remove(u);
     num_edges--;
-}
+}*/
 
-//ESPEC-7
-void GraphAL::Print_Adjancency_List(const GraphAL& g) const{
+//ESPEC-8
+void GraphAM::Print_Adjacency_Matrix(const GraphAM& g) const{
     std::cout << "num_vertices: " << g.get_num_vertices() << "\n";
     std::cout << "num_edges: " << g.get_num_edges() << "\n";
 
-    //mano, outro ngc e q ele pede que seja num_vertices - 1
-    //so q quando coloca -1 ele n imprime todos
-/*       /|\
-          |
-pensei numa solucao pra isso aqui*/
-    uint n = g.get_num_vertices() + 1;
-/*sinceramente achei brilhante*/
+    uint n = g.get_num_vertices();
 
-    for (uint u = 0; u < n-1 ; u++) {
-        std::cout << u << ": ";
-
-        const std::list<Vertex>& l = g.get_adj(u);
-
-        for (auto v: l) {
-            std::cout << v << ", ";
+    for (uint i = 0; i < n; i++) {
+        for (uint j = 0; j < n; j++) {
+            std::cout << adj[i][j] << " ";
         }
         std::cout << "\n";
     }
+    std::cout << "\n";
 }
 
 
-//ESPEC-8
-
+//ESPEC-9
 int main(){
     //ordem do grafo
     uint n = 0;
@@ -133,24 +125,18 @@ int main(){
 
     std::cin >> n >> m;
 
-    GraphAL graph(n);
+    GraphAM graph(n);
 
     uint u, v = 0;
 
-    //OUTRO ngc e q ele pede q seja n-1
-    //sendo que so roda corretamente quando e m
-/*    /|\
-       |
-pensei numa solucao melhor ainda pra esse tambem olha*/
     n = m + 1;
-/*gostou?*/
 
     for(uint i = 0; i < n-1; i++){
         std::cin >> u >> v;
         graph.add_egde(u, v);
     }
 
-    graph.Print_Adjancency_List(graph);
+    graph.Print_Adjacency_Matrix(graph);
 
     return 0;
 }
