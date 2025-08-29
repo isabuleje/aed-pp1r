@@ -1,113 +1,104 @@
 #include <iostream>
+#include <utility>
 #include <vector>
 #include <list>
+#include <optional>
 
-//ESPEC-1
+
 using uint = unsigned int;
 using Vertex = uint;
-using Weight = uint;
+using Weight = float;
+using VertexWeightPair = std::pair<Vertex, Weight>;
 
-
-class GraphAM{
+class WeightedGraphAL{
 //ESPEC-2
 private:
-    std::vector<std::vector<Weight>> adj;
+    std::list<VertexWeightPair>* adj;
     uint num_vertices;
     uint num_edges;
 
 public:
-    void add_egde(Vertex u, Vertex v);
-    void remove_egde(Vertex u, Vertex v);
-    std::list<Weight> get_adj(const Vertex u) const;
-    void Print_Adjacency_Matrix(const GraphAM& g ) const;
+    void add_edge(Vertex u, Vertex v, Weight w);
+    void remove_edge(Vertex u, Vertex v, Weight w);
+    std::list<VertexWeightPair> get_adj(const Vertex u) const;
+    std::optional<uint> get_weight(const Vertex u, const Vertex v);
     uint get_num_vertices() const;
     uint get_num_edges() const;
-    std::vector<std::vector<Weight>> get_adj_matrix() const;
+    std::vector<std::vector<Weight>> get_adj() const;
+    void Print_Adjacency_List(const WeightedGraphAL& g) const;
 
 
-    //ESPEC-3
-    GraphAM(uint num_vertices){
+    WeightedGraphAL(uint num_vertices){
 
         this->num_vertices = num_vertices;
-        this->num_edges = 0;
-
-        adj = std::vector<std::vector<Weight>>(num_vertices);
-
-        //acho que isso q faz a inicializacao de todos os elementos com 0 do jeito q ele pediur
-        for (auto& linha : adj) {
-            linha = std::vector<Weight>(num_vertices, 0);
-        }
+        adj = new std::list<VertexWeightPair>[num_vertices];
     }
 
-    //ESPEC-4
-    ~GraphAM(){
-        //prof pediu pra adicionar um comentario falando q a destruicao e automaticar
+    ~WeightedGraphAL(){
+        delete[] adj;
+        adj = nullptr;
     }
 
 
 };
 
-//ESPEC-6
-std::list<Weight> GraphAM::get_adj(const Vertex u) const{
-    if (u < 0 || u >= num_vertices) {
+std::list<VertexWeightPair> WeightedGraphAL::get_adj(const Vertex u) const{
+    if (u >= num_vertices) {
         throw std::invalid_argument("botou um numero que nao ta na lista");
     }
 
-    std::list<Weight> lista;
-
-    //aq na real ele pediu pra ser o U pra ser usado no loop
-    for (int v = 0; v < get_num_vertices() - 1 ; v++) {
-        if (adj[u][v] != 0) {
-            lista.push_back(v);
-        }
-    }
-
-    return lista;
+    return adj[u];
 }
 
-uint GraphAM::get_num_vertices() const {
+std::optional<uint> WeightedGraphAL::get_weight(const Vertex u, const Vertex v) {
+    for (VertexWeightPair pair : adj[u]) {
+        if (v == pair.first) {
+            return pair.second;
+        }
+    }
+    return std::nullopt;
+}
+
+uint WeightedGraphAL::get_num_vertices() const {
     return num_vertices;
 }
 
-uint GraphAM::get_num_edges() const{
+uint WeightedGraphAL::get_num_edges() const{
     return num_edges;
 }
 
-//ESPEC-7
-std::vector<std::vector<Weight>> GraphAM::get_adj_matrix() const {
-    return adj;
-}
-
-//ESPEC-5
-void GraphAM::add_egde(const Vertex u, const Vertex v){
-    if (u < 0 || v < 0 || u >= num_vertices || v >= num_vertices || u == v) {
+void WeightedGraphAL::add_edge(const Vertex u, const Vertex v, const Weight w){
+    if (u >= num_vertices || v >= num_vertices || u == v) {
         throw std::invalid_argument("Um valor eh negativo our um eh maior que numero de vertices our sao imguais");
     }
-    adj[u][v] = 1;
-    adj[v][u] = 1;
+    adj[u].push_back(VertexWeightPair(v, w));
+    adj[v].push_back(VertexWeightPair(u, w));
     num_edges++;
 }
 
-//conserta ae
-void GraphAM::remove_egde(const Vertex u, const Vertex v){
+/*
+void WeightedGraphAL::remove_egde(const Vertex u, const Vertex v){
     if (u < 0 || v < 0 || u >= num_vertices || v >= num_vertices || u == v) {
         throw std::invalid_argument("Um valor eh negativo our um eh maior que numero de vertices our sao imguais");
     }
-    adj[u].remove(v);
-    adj[v].remove(u);
+    adj[u][v] = 0;
+    adj[v][u] = 0;
     num_edges--;
 }
+*/
 
-//ESPEC-8
-void GraphAM::Print_Adjacency_Matrix(const GraphAM& g) const{
+void WeightedGraphAL::Print_Adjacency_List(const WeightedGraphAL& g) const{
     std::cout << "num_vertices: " << g.get_num_vertices() << "\n";
     std::cout << "num_edges: " << g.get_num_edges() << "\n";
 
-    uint n = g.get_num_vertices();
+    uint n = g.get_num_vertices() + 1;
 
-    for (uint i = 0; i < n; i++) {
-        for (uint j = 0; j < n; j++) {
-            std::cout << adj[i][j] << " ";
+    for (uint i = 0; i < n - 1; i++) {
+        std::list<VertexWeightPair> l = adj[i];
+        std::cout << i << ": ";
+        while (l.size() != 0) {
+            std::cout << "(" << l.front().first << ", " << l.front().second << "), ";
+            l.pop_front();            
         }
         std::cout << "\n";
     }
@@ -115,7 +106,6 @@ void GraphAM::Print_Adjacency_Matrix(const GraphAM& g) const{
 }
 
 
-//ESPEC-9
 int main(){
     //ordem do grafo
     uint n = 0;
@@ -125,18 +115,19 @@ int main(){
 
     std::cin >> n >> m;
 
-    GraphAM graph(n);
+    WeightedGraphAL graph(n);
 
     uint u, v = 0;
+    Weight w = 0;
 
-    n = m + 1;
+    m++;
 
-    for(uint i = 0; i < n-1; i++){
-        std::cin >> u >> v;
-        graph.add_egde(u, v);
+    for(uint i = 0; i < m-1; i++){
+        std::cin >> u >> v >> w;
+        graph.add_edge(u, v, w);
     }
 
-    graph.Print_Adjacency_Matrix(graph);
+    graph.Print_Adjacency_List(graph);
 
     return 0;
 }
