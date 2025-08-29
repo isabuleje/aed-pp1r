@@ -89,14 +89,14 @@ void GraphAM::add_egde(const Vertex u, const Vertex v){
 }
 
 //conserta ae
-/*void GraphAM::remove_egde(const Vertex u, const Vertex v){
+void GraphAM::remove_egde(const Vertex u, const Vertex v){
     if (u < 0 || v < 0 || u >= num_vertices || v >= num_vertices || u == v) {
         throw std::invalid_argument("Um valor eh negativo our um eh maior que numero de vertices our sao imguais");
     }
     adj[u].remove(v);
     adj[v].remove(u);
     num_edges--;
-}*/
+}
 
 //ESPEC-8
 void GraphAM::Print_Adjacency_Matrix(const GraphAM& g) const{
