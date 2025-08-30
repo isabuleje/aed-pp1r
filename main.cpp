@@ -5,6 +5,7 @@
 #include <optional>
 #include <limits>
 
+//ESPEC-D1
 using uint = unsigned int;
 using Vertex = uint;
 using Weight = float;
@@ -19,7 +20,7 @@ private:
 
 public:
     void add_edge(Vertex u, Vertex v, Weight w);
-    void remove_edge(Vertex u, Vertex v, Weight w);
+    void remove_edge(const Vertex u,const Vertex v,const Weight w);
     std::list<uint> get_adj(const Vertex u) const;
     std::vector<std::vector<Weight>> get_adj_matrix();
     std::optional<uint> get_weight(const Vertex u, const Vertex v);
@@ -33,20 +34,18 @@ public:
 
         this->num_vertices = num_vertices;
         this->num_edges = 0;
-        adj.resize(num_vertices);
-        for (int i = 0; i < num_vertices; i++) {
-            adj[i].resize(num_vertices);
-            for (int j = 0; j < num_vertices; j++) {
-                adj[i][j] = std::numeric_limits<Weight>::infinity();
-//o professor sugeriu inicializar a lista com valores infinitos mas tem que ser
-//declarado fora do construtor e inicializado dentro entao n da
-//e n da pra ser const
-            }
-        }
+
+        //inicializa todas as posicoes com infinito sem usar o loop q nem o prof pediu
+        adj = std::vector<std::vector<Weight>>(
+            num_vertices,
+            std::vector<Weight>(num_vertices, std::numeric_limits<Weight>::infinity())
+        );
+
     }
 
     ~WeightedGraphAM(){
         //nada
+        //prof pediu pra adicionar um comentario falando q a destruicao e automaticar
     }
 
 
@@ -59,7 +58,7 @@ std::list<uint> WeightedGraphAM::get_adj(const Vertex u) const{
     std::list<Vertex> adjacentes = std::list<Vertex>();
 
     uint n = num_vertices + 1; //"Utilize uma repeticao fazendo uma variavel v ir de 0 ate n - 1"
-    for (int v = 0; v < n - 1; v++) {
+    for (uint v = 0; v < n - 1; v++) {
 //a lista pede pra verificar se os valores sao nulos mas nenhum valor e nulo se todos sao infinitos
 //acho que ele quis dizer verificar se o valor e infinito
         if (adj[u][v] != std::numeric_limits<Weight>::infinity()) {
@@ -89,28 +88,34 @@ uint WeightedGraphAM::get_num_edges() const{
     return num_edges;
 }
 
+//ESPEC-D5
 void WeightedGraphAM::add_edge(const Vertex u, const Vertex v, const Weight w){
     if (u >= num_vertices || v >= num_vertices || u == v) {
         throw std::invalid_argument("Um valor eh negativo our um eh maior que numero de vertices our sao imguais");
     }
+    if (adj[u][v] == std::numeric_limits<Weight>::infinity()) {
+        // corrige a contagemr
+        num_edges++;
+    }
+
     adj[u][v] = w;
     adj[v][u] = w;
-    num_edges++;
 }
 
-/*
-void WeightedGraphAM::remove_egde(const Vertex u, const Vertex v){
+
+void WeightedGraphAM::remove_edge(const Vertex u,const Vertex v,const Weight w){
     if (u < 0 || v < 0 || u >= num_vertices || v >= num_vertices || u == v) {
         throw std::invalid_argument("Um valor eh negativo our um eh maior que numero de vertices our sao imguais");
     }
-    adj[u][v] = 0;
-    adj[v][u] = 0;
+    if (adj[u][v] != std::numeric_limits<Weight>::infinity()) {
+        adj[u][v] = std::numeric_limits<Weight>::infinity();
+        adj[v][u] = std::numeric_limits<Weight>::infinity();
+    }
     num_edges--;
 }
-*/
 
-void WeightedGraphAM::Print_Adjacency_Matrix(const WeightedGraphAM
-& g) const{
+
+void WeightedGraphAM::Print_Adjacency_Matrix(const WeightedGraphAM& g) const{
     std::cout << "num_vertices: " << g.get_num_vertices() << "\n";
     std::cout << "num_edges: " << g.get_num_edges() << "\n";
 
@@ -138,15 +143,13 @@ int main(){
 
     std::cin >> n >> m;
 
-    WeightedGraphAM
- graph(n);
+    WeightedGraphAM graph(n);
 
     uint u, v = 0;
     Weight w = 0;
 
-    m++;
 
-    for(uint i = 0; i < m-1; i++){
+    for(uint i = 0; i < m; i++){
         std::cin >> u >> v >> w;
         graph.add_edge(u, v, w);
     }
